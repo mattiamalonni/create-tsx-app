@@ -5,9 +5,13 @@
 ## 🌟 Features
 
 ✅ **Interactive prompts** for project setup
+<br />
 ✅ **Customizable project name and package.json**
+<br />
 ✅ **Automatically installs dependencies** (`tsx`, `typescript`)
+<br />
 ✅ **Option to overwrite existing directories**
+<br />
 ✅ **Minimal boilerplate with a ready-to-run TypeScript setup**
 
 ## 📦 Installation
@@ -47,7 +51,6 @@ This will:
 | ------------- | ----- | -------------------------------------------------- |
 | `--install`   | `-i`  | Automatically install dependencies (`npm install`) |
 | `--overwrite` | `-o`  | Overwrite an existing directory without asking     |
-| `--help`      | `-h`  | Show help information                              |
 
 ### **Example Usage with Flags**
 
@@ -76,51 +79,6 @@ my-app/
 ├── .gitignore          # Git ignore file
 └── README.md           # Project documentation
 ```
-
-## 🛠️ Running the Project
-
-After setup, navigate into your project directory:
-
-```sh
-cd my-app
-npx tsx src/index.ts
-```
-
-To install dependencies manually:
-
-```sh
-npm install
-```
-
-## ⚡ Example Output
-
-```sh
-npx create-tsx-app my-app
-```
-
-```
-Welcome to create-tsx-app! 🚀
-This tool will help you set up a new TypeScript project with tsx.
-
-✔ App name: my-app
-✔ Do you want to install dependencies now? (y/n) y
-
-Scaffolding project in /Users/yourname/my-app...
-Installing dependencies...
-Dependencies installed successfully.
-
-Setup complete! 🎉
-Start your project by running:
-
-  cd my-app
-  npm run dev
-```
-
-## 📜 License
-
-This project is licensed under the **MIT License**.
-
----
 
 ### **🚀 Ready to Start?**
 
