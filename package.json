@@ -1,0 +1,37 @@
+{
+  "name": "create-tsx-app",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "author": "Mattia Malonni",
+  "homepage": "https://github.com/mattiamalonni/create-tsx-app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattiamalonni/create-tsx-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mattiamalonni/create-tsx-app/issues"
+  },
+  "bin": {
+    "create-tsx-app": "index.js"
+  },
+  "files": [
+    "index.js",
+    "template",
+    "dist"
+  ],
+  "scripts": {
+    "dev": "unbuild --stub",
+    "build": "unbuild",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": "^18.0.0 || ^20.0.0 || >=22.0.0"
+  },
+  "devDependencies": {
+    "@clack/prompts": "^0.10.0",
+    "@types/node": "^22.13.8",
+    "mri": "^1.2.0",
+    "unbuild": "^3.5.0"
+  }
+}
