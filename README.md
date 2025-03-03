@@ -1,6 +1,6 @@
 # create-tsx-app 🚀
 
-**create-tsx-app** is a CLI tool that quickly scaffolds a new TypeScript project with [`tsx`](https://github.com/esbuild/tsx) pre-configured. It sets up a clean and minimal project structure, allowing you to start coding immediately.
+**create-tsx-app** is a CLI tool that quickly scaffolds a new TypeScript project with [`tsx`](https://github.com/privatenumber/tsx) pre-configured. It sets up a clean and minimal project structure, allowing you to start coding immediately.
 
 ## 🌟 Features
 
