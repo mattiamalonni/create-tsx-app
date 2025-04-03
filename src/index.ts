@@ -116,10 +116,28 @@ async function init() {
   }
 
   if (installDeps) {
-    prompts.log.step('Installing dependencies...');
+    const packageManager = await prompts.select({
+      message: `Use npm or pnpm package manager ?`,
+      options: [
+        { value: 'npm', label: 'npm' },
+        { value: 'pnpm', label: 'pnpm' },
+      ],
+    });
+
+    if (prompts.isCancel(packageManager)) return cancel();
 
     try {
-      execSync('npm install --silent', { cwd: root, stdio: 'inherit' });
+      switch (packageManager) {
+        case 'pnpm':
+          prompts.log.step(`Installing dependencies using pnpm...`);
+          execSync(`npx pnpm install --silent`, { cwd: root, stdio: 'inherit' });
+          break;
+        default:
+          prompts.log.step(`Installing dependencies using npm...`);
+          execSync(`npm install --silent`, { cwd: root, stdio: 'inherit' });
+      }
+
+      // execSync(`npm install --silent`, { cwd: root, stdio: 'inherit' });
       prompts.log.step('Dependencies installed successfully.');
     } catch (error) {
       prompts.log.error('Failed to install dependencies. You can run `npm install` manually.');
