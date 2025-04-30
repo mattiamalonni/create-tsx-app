@@ -117,10 +117,11 @@ async function init() {
 
   if (installDeps) {
     const packageManager = await prompts.select({
-      message: `Use npm or pnpm package manager ?`,
+      message: `Select your preferred package manager:`,
       options: [
         { value: 'npm', label: 'npm' },
         { value: 'pnpm', label: 'pnpm' },
+        { value: 'yarn', label: 'yarn' },
       ],
     });
 
@@ -131,6 +132,10 @@ async function init() {
         case 'pnpm':
           prompts.log.step(`Installing dependencies using pnpm...`);
           execSync(`npx pnpm install --silent`, { cwd: root, stdio: 'inherit' });
+          break;
+        case 'yarn':
+          prompts.log.step(`Installing dependencies using yarn...`);
+          execSync(`npx yarn install --silent`, { cwd: root, stdio: 'inherit' });
           break;
         default:
           prompts.log.step(`Installing dependencies using npm...`);
