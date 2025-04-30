@@ -21,7 +21,7 @@
     "dist"
   ],
   "scripts": {
-    "dev": "unbuild --stub",
+    "dev": "unbuild --stub && node dist/index.mjs",
     "build": "unbuild",
     "prepublishOnly": "npm run build"
   },

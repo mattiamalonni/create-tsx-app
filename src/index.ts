@@ -54,7 +54,7 @@ async function init() {
             { value: 'ignore', label: 'Ignore files and continue' },
           ],
         });
-    if (prompts.isCancel(overwrite)) return cancel();
+
     switch (overwrite) {
       case 'yes':
         emptyDir(targetDir);
