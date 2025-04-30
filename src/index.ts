@@ -49,12 +49,12 @@ async function init() {
             (targetDir === '.' ? 'Current directory' : `Target directory "${targetDir}"`) +
             ` is not empty. Please choose how to proceed:`,
           options: [
-            { value: 'no', label: 'Cancel operation' },
+            { value: 'no', label: 'Cancel operation 2' },
             { value: 'yes', label: 'Remove existing files and continue' },
             { value: 'ignore', label: 'Ignore files and continue' },
           ],
         });
-    if (prompts.isCancel(overwrite)) return cancel();
+    // if (prompts.isCancel(overwrite)) return cancel();
     switch (overwrite) {
       case 'yes':
         emptyDir(targetDir);
