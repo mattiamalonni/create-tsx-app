@@ -142,7 +142,6 @@ async function init() {
           execSync(`npm install --silent`, { cwd: root, stdio: 'inherit' });
       }
 
-      // execSync(`npm install --silent`, { cwd: root, stdio: 'inherit' });
       prompts.log.step('Dependencies installed successfully.');
     } catch (error) {
       prompts.log.error('Failed to install dependencies. You can run `npm install` manually.');
