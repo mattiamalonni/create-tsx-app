@@ -7,8 +7,5 @@
     "dev": "tsx src/index.ts",
     "build": "tsc src/index.ts"
   },
-  "devDependencies": {
-    "tsx": "^4.19.3",
-    "typescript": "^5.8.2"
-  }
+  "devDependencies": {}
 }

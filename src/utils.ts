@@ -52,3 +52,53 @@ export function writeFile(file: string, srcFile?: string, content?: string): voi
   if (srcFile && file) return copy(srcFile, file);
   else if (file && content) fs.writeFileSync(file, content);
 }
+
+// Function to detect the package manager used to launch the script
+export function detectPackageManager(): string {
+  // Check npm_execpath environment variable (set by npm/npx)
+  const npmExecPath = process.env.npm_execpath;
+  if (npmExecPath) {
+    if (npmExecPath.includes('pnpm')) {
+      return 'pnpm';
+    }
+    if (npmExecPath.includes('yarn')) {
+      return 'yarn';
+    }
+    if (npmExecPath.includes('npm')) {
+      return 'npm';
+    }
+  }
+
+  // Check npm_config_user_agent (more reliable for detecting package manager)
+  const userAgent = process.env.npm_config_user_agent;
+  if (userAgent) {
+    if (userAgent.includes('pnpm')) {
+      return 'pnpm';
+    }
+    if (userAgent.includes('yarn')) {
+      return 'yarn';
+    }
+    if (userAgent.includes('npm')) {
+      return 'npm';
+    }
+  }
+
+  // Check PNPM_HOME environment variable
+  if (process.env.PNPM_HOME) {
+    return 'pnpm';
+  }
+
+  // Check argv for package manager clues
+  const argv0 = process.argv[0];
+  const argv1 = process.argv[1];
+
+  if (argv0?.includes('pnpm') || argv1?.includes('pnpm')) {
+    return 'pnpm';
+  }
+  if (argv0?.includes('yarn') || argv1?.includes('yarn')) {
+    return 'yarn';
+  }
+
+  // Default fallback
+  return 'npm';
+}

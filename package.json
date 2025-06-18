@@ -1,29 +1,24 @@
 {
   "name": "create-tsx-app",
-  "version": "1.0.6",
+  "version": "1.0.7",
+  "description": "A CLI tool to quickly scaffold a TypeScript project with tsx support, providing an easy and efficient development setup.",
   "type": "module",
-  "license": "MIT",
-  "author": "Mattia Malonni",
-  "homepage": "https://github.com/mattiamalonni/create-tsx-app",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mattiamalonni/create-tsx-app.git"
-  },
-  "bugs": {
-    "url": "https://github.com/mattiamalonni/create-tsx-app/issues"
-  },
   "bin": {
     "create-tsx-app": "index.js"
   },
   "files": [
-    "index.js",
+    "dist",
     "template",
-    "dist"
+    "index.js"
   ],
   "scripts": {
     "dev": "unbuild --stub && node dist/index.mjs",
+    "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts",
+    "type-check": "tsc --noEmit",
+    "check": "pnpm run type-check && pnpm run format:check",
     "build": "unbuild",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "pnpm run check && pnpm run build"
   },
   "engines": {
     "node": "^18.0.0 || ^20.0.0 || >=22.0.0"
@@ -32,6 +27,16 @@
     "@clack/prompts": "^0.10.0",
     "@types/node": "^22.13.8",
     "mri": "^1.2.0",
+    "prettier": "^3.5.3",
     "unbuild": "^3.5.0"
+  },
+  "author": "Mattia Malonni",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattiamalonni/create-tsx-app.git"
+  },
+  "homepage": "https://github.com/mattiamalonni/create-tsx-app#readme",
+  "bugs": {
+    "url": "https://github.com/mattiamalonni/create-tsx-app/issues"
   }
 }
