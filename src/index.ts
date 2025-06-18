@@ -24,7 +24,43 @@ const renameFiles: Record<string, string | undefined> = {
 const defaultTargetDir = 'tsx-app';
 const cancel = () => prompts.cancel('Operation cancelled');
 
+function showHelp() {
+  console.log(`
+create-tsx-app - Scaffold a new TypeScript project with tsx
+
+Usage:
+  create-tsx-app [project-name] [options]
+  npm create tsx-app [project-name] [options]
+  pnpm create tsx-app [project-name] [options]
+  yarn create tsx-app [project-name] [options]
+
+Arguments:
+  project-name           The name of the project directory (default: ${defaultTargetDir})
+
+Options:
+  -h, --help            Show this help message
+  -i, --install         Automatically install dependencies
+  -o, --overwrite       Overwrite existing directory without asking
+
+Examples:
+  create-tsx-app my-app
+  create-tsx-app my-app --install
+  npm create tsx-app@latest my-project --install --overwrite
+  pnpm create tsx-app my-project --install
+  yarn create tsx-app my-project --install
+
+The tool will automatically detect which package manager you used to run it
+and use the same one for installing dependencies.
+`);
+}
+
 async function init() {
+  // Handle help flag
+  if (argv.help) {
+    showHelp();
+    return;
+  }
+
   prompts.intro('Welcome to create-tsx-app! This tool will help you set up a new TypeScript project with tsx.');
 
   const packageManager = detectPackageManager();
