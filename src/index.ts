@@ -90,6 +90,12 @@ async function init() {
   for (const file of files) {
     const srcFile = path.join(templateDir, file);
     const destFile = path.join(root, renameFiles[file] || file);
+
+    const isDir = fs.statSync(srcFile).isDirectory();
+
+    // Log the progress of each file or dir being copied
+    prompts.log.info(`Copying template ${isDir ? 'dir' : 'file'}: ${renameFiles[file] || file}...`);
+
     writeFile(destFile, srcFile);
   }
 
