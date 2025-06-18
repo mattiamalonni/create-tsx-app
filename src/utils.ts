@@ -58,6 +58,9 @@ export function detectPackageManager(): string {
   // Check npm_execpath environment variable (set by npm/npx)
   const npmExecPath = process.env.npm_execpath;
   if (npmExecPath) {
+    if (npmExecPath.includes('bun')) {
+      return 'bun';
+    }
     if (npmExecPath.includes('pnpm')) {
       return 'pnpm';
     }
@@ -72,6 +75,9 @@ export function detectPackageManager(): string {
   // Check npm_config_user_agent (more reliable for detecting package manager)
   const userAgent = process.env.npm_config_user_agent;
   if (userAgent) {
+    if (userAgent.includes('bun')) {
+      return 'bun';
+    }
     if (userAgent.includes('pnpm')) {
       return 'pnpm';
     }
@@ -83,6 +89,11 @@ export function detectPackageManager(): string {
     }
   }
 
+  // Check for Bun
+  if (process.env.BUN_INSTALL) {
+    return 'bun';
+  }
+
   // Check PNPM_HOME environment variable
   if (process.env.PNPM_HOME) {
     return 'pnpm';
@@ -92,6 +103,9 @@ export function detectPackageManager(): string {
   const argv0 = process.argv[0];
   const argv1 = process.argv[1];
 
+  if (argv0?.includes('bun') || argv1?.includes('bun')) {
+    return 'bun';
+  }
   if (argv0?.includes('pnpm') || argv1?.includes('pnpm')) {
     return 'pnpm';
   }

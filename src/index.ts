@@ -33,6 +33,7 @@ Usage:
   npm create tsx-app [project-name] [options]
   pnpm create tsx-app [project-name] [options]
   yarn create tsx-app [project-name] [options]
+  bun create tsx-app [project-name] [options]
 
 Arguments:
   project-name           The name of the project directory (default: ${defaultTargetDir})
@@ -48,6 +49,7 @@ Examples:
   npm create tsx-app@latest my-project --install --overwrite
   pnpm create tsx-app my-project --install
   yarn create tsx-app my-project --install
+  bun create tsx-app my-project --install
 
 The tool will automatically detect which package manager you used to run it
 and use the same one for installing dependencies.
@@ -91,7 +93,18 @@ async function init() {
         });
 
     if (prompts.isCancel(overwrite)) return cancel();
-    overwrite === 'yes' ? emptyDir(targetDir) : overwrite === 'no' ? cancel() : undefined;
+
+    switch (overwrite) {
+      case 'yes':
+        emptyDir(targetDir);
+        break;
+      case 'no':
+        cancel();
+        return;
+      case 'ignore':
+        // Continue without clearing
+        break;
+    }
   }
 
   // Ensure targetDir is a valid directory name
@@ -121,18 +134,35 @@ async function init() {
 
   const templateDir = path.resolve(fileURLToPath(import.meta.url), '../..', `template`);
 
+  // Validate template directory exists
+  if (!fs.existsSync(templateDir)) {
+    prompts.log.error('Template directory not found. Please reinstall create-tsx-app.');
+    return;
+  }
+
+  // Validate package manager
+  const validPackageManagers = ['npm', 'pnpm', 'yarn', 'bun'];
+  if (!validPackageManagers.includes(packageManager)) {
+    prompts.log.warn(`Unknown package manager: ${packageManager}. Falling back to npm.`);
+  }
+
   const files = fs.readdirSync(templateDir).filter(f => f !== 'package.json');
 
   for (const file of files) {
     const srcFile = path.join(templateDir, file);
     const destFile = path.join(root, renameFiles[file] || file);
 
-    const isDir = fs.statSync(srcFile).isDirectory();
+    try {
+      const isDir = fs.statSync(srcFile).isDirectory();
 
-    // Log the progress of each file or dir being copied
-    prompts.log.info(`Copying template ${isDir ? 'dir' : 'file'}: ${renameFiles[file] || file} ...`);
+      // Log the progress of each file or dir being copied
+      prompts.log.step(`Copying ${isDir ? 'directory' : 'file'}: ${renameFiles[file] || file}`);
 
-    writeFile(destFile, srcFile);
+      writeFile(destFile, srcFile);
+    } catch (error) {
+      prompts.log.error(`Failed to copy ${file}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return;
+    }
   }
 
   const pkg = JSON.parse(fs.readFileSync(path.join(templateDir, `package.json`), 'utf-8'));
@@ -140,6 +170,14 @@ async function init() {
   pkg.name = packageName;
 
   writeFile(path.join(root, 'package.json'), undefined, JSON.stringify(pkg, null, 2) + '\n');
+
+  // Process README.md template if it exists
+  const readmePath = path.join(templateDir, 'README.md');
+  if (fs.existsSync(readmePath)) {
+    let readmeContent = fs.readFileSync(readmePath, 'utf-8');
+    readmeContent = readmeContent.replace(/\{\{PROJECT_NAME\}\}/g, packageName);
+    fs.writeFileSync(path.join(root, 'README.md'), readmeContent);
+  }
 
   // Installing dependencies
 
@@ -160,6 +198,9 @@ async function init() {
       prompts.log.step(`Installing dependencies using ${packageManager}...`);
 
       switch (packageManager) {
+        case 'bun':
+          execSync(`bun add -D typescript tsx`, { cwd: root, stdio: 'inherit' });
+          break;
         case 'pnpm':
           execSync(`pnpm add -D typescript tsx`, { cwd: root, stdio: 'inherit' });
           break;
@@ -172,18 +213,28 @@ async function init() {
 
       prompts.log.step('Dependencies installed successfully.');
     } catch (error) {
-      prompts.log.error(
-        `Failed to install dependencies. You can run \`${packageManager} ${
-          packageManager === 'npm' ? 'install -D' : 'add -D'
-        } typescript tsx\` manually.`,
-      );
+      const installCommand = packageManager === 'npm' ? 'install -D' : 'add -D';
+      prompts.log.error(`Failed to install dependencies. You can run \`${packageManager} ${installCommand} typescript tsx\` manually.`);
     }
   } else {
     const installCommand = packageManager === 'npm' ? 'npm install -D typescript tsx' : `${packageManager} add -D typescript tsx`;
     prompts.log.info(`You can install dependencies later by running \`${installCommand}\` inside the project folder.`);
   }
 
-  prompts.outro('Done.');
+  prompts.outro(`
+✅ Project created successfully!
+
+Next steps:
+  1. Navigate to your project: cd ${targetDir}
+  ${
+    installDeps
+      ? '2. Start developing: npm run dev'
+      : `2. Install dependencies: ${packageManager === 'npm' ? 'npm install -D typescript tsx' : `${packageManager} add -D typescript tsx`}
+  3. Start developing: npm run dev`
+  }
+
+Happy coding! 🚀
+  `);
 }
 
 init().catch(console.error);

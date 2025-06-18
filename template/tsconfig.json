@@ -8,12 +8,12 @@
     /* Modules */
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
 
     /* Emit */
-    "noEmit": true,
+    "noEmit": false,
+    "outDir": "./dist",
     "sourceMap": true,
 
     /* Interop Constraints */
