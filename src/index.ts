@@ -94,7 +94,7 @@ async function init() {
     const isDir = fs.statSync(srcFile).isDirectory();
 
     // Log the progress of each file or dir being copied
-    prompts.log.info(`Copying template ${isDir ? 'dir' : 'file'}: ${renameFiles[file] || file}...`);
+    prompts.log.info(`Copying template ${isDir ? 'dir' : 'file'}: ${renameFiles[file] || file} ...`);
 
     writeFile(destFile, srcFile);
   }
@@ -144,7 +144,7 @@ async function init() {
     }
   } else {
     const installCommand = packageManager === 'npm' ? 'npm install -D typescript tsx' : `${packageManager} add -D typescript tsx`;
-    prompts.log.step(`You can install dependencies later by running \`${installCommand}\` inside the project folder.`);
+    prompts.log.info(`You can install dependencies later by running \`${installCommand}\` inside the project folder.`);
   }
 
   prompts.outro('Done.');
