@@ -10,8 +10,12 @@ function main(): void {
   console.log(message);
 
   // Example of modern JavaScript features
-  const features = ['TypeScript support', 'Fast compilation with tsx', 'Modern ES modules', 'Strict type checking'];
-
+  const features = [
+    'TypeScript support',
+    'Fast compilation with tsx',
+    'Modern ES modules',
+    'Strict type checking',
+  ];
   console.log('\nProject features:');
   features.forEach((feature, index) => {
     console.log(`${index + 1}. ${feature}`);

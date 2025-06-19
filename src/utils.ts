@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 
 export function formatTargetDir(targetDir: string): string {
   return targetDir.trim().replace(/\/+$/g, '');
@@ -53,9 +54,7 @@ export function writeFile(file: string, srcFile?: string, content?: string): voi
   else if (file && content) fs.writeFileSync(file, content);
 }
 
-// Function to detect the package manager used to launch the script
 export function detectPackageManager(): string {
-  // Check npm_execpath environment variable (set by npm/npx)
   const npmExecPath = process.env.npm_execpath;
   if (npmExecPath) {
     if (npmExecPath.includes('bun')) {
@@ -72,7 +71,6 @@ export function detectPackageManager(): string {
     }
   }
 
-  // Check npm_config_user_agent (more reliable for detecting package manager)
   const userAgent = process.env.npm_config_user_agent;
   if (userAgent) {
     if (userAgent.includes('bun')) {
@@ -89,17 +87,14 @@ export function detectPackageManager(): string {
     }
   }
 
-  // Check for Bun
   if (process.env.BUN_INSTALL) {
     return 'bun';
   }
 
-  // Check PNPM_HOME environment variable
   if (process.env.PNPM_HOME) {
     return 'pnpm';
   }
 
-  // Check argv for package manager clues
   const argv0 = process.argv[0];
   const argv1 = process.argv[1];
 
@@ -113,6 +108,52 @@ export function detectPackageManager(): string {
     return 'yarn';
   }
 
-  // Default fallback
   return 'npm';
+}
+
+export function validateNodeVersion(): { isValid: boolean; currentVersion: string; requiredVersion: string } {
+  const currentVersion = process.version;
+  const requiredVersion = '18.0.0';
+
+  // Parse version numbers
+  const parseVersion = (version: string) => {
+    const cleaned = version.replace(/^v/, '');
+    return cleaned.split('.').map(num => parseInt(num, 10));
+  };
+
+  const current = parseVersion(currentVersion);
+  const required = parseVersion(requiredVersion);
+
+  // Compare major version first
+  if (current[0] > required[0]) return { isValid: true, currentVersion, requiredVersion };
+  if (current[0] < required[0]) return { isValid: false, currentVersion, requiredVersion };
+
+  // Same major version, compare minor
+  if (current[1] > required[1]) return { isValid: true, currentVersion, requiredVersion };
+  if (current[1] < required[1]) return { isValid: false, currentVersion, requiredVersion };
+
+  // Same major and minor, compare patch
+  return {
+    isValid: current[2] >= required[2],
+    currentVersion,
+    requiredVersion,
+  };
+}
+
+export function isGitInstalled(): boolean {
+  try {
+    execSync('git --version', { stdio: 'pipe' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function isPackageManagerInstalled(manager: string): boolean {
+  try {
+    execSync(`${manager} --version`, { stdio: 'pipe' });
+    return true;
+  } catch {
+    return false;
+  }
 }

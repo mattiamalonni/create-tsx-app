@@ -2,86 +2,73 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
-import mri from 'mri';
-import * as prompts from '@clack/prompts';
-import { emptyDir, formatTargetDir, isDirEmpty, isValidPackageName, toValidPackageName, writeFile, detectPackageManager } from './utils';
 
-const argv = mri<{
-  help?: boolean;
-  install?: boolean;
-  overwrite?: boolean;
-}>(process.argv.slice(2), {
-  alias: { h: 'help', i: 'install', o: 'overwrite' },
-  boolean: ['help', 'install', 'overwrite'],
-});
+import * as prompts from '@clack/prompts';
+import {
+  emptyDir,
+  formatTargetDir,
+  isDirEmpty,
+  isValidPackageName,
+  toValidPackageName,
+  writeFile,
+  detectPackageManager,
+  validateNodeVersion,
+  isGitInstalled,
+  isPackageManagerInstalled,
+} from './utils';
+
+import cli from './cli';
+
+const { args, options } = cli;
 
 const cwd = process.cwd();
 
 const renameFiles: Record<string, string | undefined> = {
   _gitignore: '.gitignore',
+  '_eslint.config.js': 'eslint.config.js',
+  '_eslint.prettier.config.js': 'eslint.config.js',
+  '_prettierrc.json': '.prettierrc.json',
+  _prettierignore: '.prettierignore',
+  _env: '.env',
 };
 
 const defaultTargetDir = 'tsx-app';
 const cancel = () => prompts.cancel('Operation cancelled');
 
-function showHelp() {
-  console.log(`
-create-tsx-app - Scaffold a new TypeScript project with tsx
-
-Usage:
-  create-tsx-app [project-name] [options]
-  npm create tsx-app [project-name] [options]
-  pnpm create tsx-app [project-name] [options]
-  yarn create tsx-app [project-name] [options]
-  bun create tsx-app [project-name] [options]
-
-Arguments:
-  project-name           The name of the project directory (default: ${defaultTargetDir})
-
-Options:
-  -h, --help            Show this help message
-  -i, --install         Automatically install dependencies
-  -o, --overwrite       Overwrite existing directory without asking
-
-Examples:
-  create-tsx-app my-app
-  create-tsx-app my-app --install
-  npm create tsx-app@latest my-project --install --overwrite
-  pnpm create tsx-app my-project --install
-  yarn create tsx-app my-project --install
-  bun create tsx-app my-project --install
-
-The tool will automatically detect which package manager you used to run it
-and use the same one for installing dependencies.
-`);
-}
-
 async function init() {
-  // Handle help flag
-  if (argv.help) {
-    showHelp();
-    return;
+  // Validate Node.js version
+  const nodeValidation = validateNodeVersion();
+  if (!nodeValidation.isValid) {
+    prompts.log.error(`Node.js version ${nodeValidation.requiredVersion} or higher is required. You are using ${nodeValidation.currentVersion}.`);
+    prompts.log.info('Please update Node.js: https://nodejs.org/');
+    process.exit(1);
   }
 
   prompts.intro('Welcome to create-tsx-app! This tool will help you set up a new TypeScript project with tsx.');
 
   const packageManager = detectPackageManager();
 
-  const argOverwrite = argv.overwrite;
-  const argInstall = argv.install;
+  // Validate package manager is available
+  if (!isPackageManagerInstalled(packageManager)) {
+    prompts.log.error(`Package manager "${packageManager}" is not installed or not available.`);
+    prompts.log.info(`Please install ${packageManager} or use a different package manager.`);
+    process.exit(1);
+  }
 
-  let targetDir = argv._[0];
-
+  let targetDir = args[0];
   if (!targetDir) {
-    const _targetDir = await prompts.text({ message: 'App name:', defaultValue: defaultTargetDir, placeholder: defaultTargetDir });
+    const _targetDir = await prompts.text({
+      message: 'App name:',
+      defaultValue: defaultTargetDir,
+      placeholder: defaultTargetDir,
+    });
     if (prompts.isCancel(_targetDir)) return cancel();
     targetDir = formatTargetDir(_targetDir as string);
   }
 
-  // Validate targetDir
-
+  let shouldOverwrite = false;
   if (!isDirEmpty(targetDir)) {
-    const overwrite = argOverwrite
+    const overwrite = options.overwrite
       ? 'yes'
       : await prompts.select({
           message: (targetDir === '.' ? 'Current' : `Target`) + ` "${targetDir}" is not empty. Please choose how to proceed:`,
@@ -94,23 +81,15 @@ async function init() {
 
     if (prompts.isCancel(overwrite)) return cancel();
 
-    switch (overwrite) {
-      case 'yes':
-        emptyDir(targetDir);
-        break;
-      case 'no':
-        cancel();
-        return;
-      case 'ignore':
-        // Continue without clearing
-        break;
+    if (overwrite === 'no') {
+      prompts.outro('Operation cancelled');
+      return;
     }
+
+    shouldOverwrite = overwrite === 'yes';
   }
 
-  // Ensure targetDir is a valid directory name
-
   let packageName = toValidPackageName(targetDir);
-
   if (!isValidPackageName(packageName)) {
     const _packageName = await prompts.text({
       message: 'Package name:',
@@ -121,26 +100,75 @@ async function init() {
       },
     });
     if (prompts.isCancel(_packageName)) return cancel();
-
     packageName = _packageName;
   }
 
-  // Create target directory
+  const isInteractive = options.interactive;
+
+  // When --no-feature is used, cac sets feature to false
+  // Default to true for all features, disable only if explicitly set to false
+  let useEslint = options.eslint !== false;
+  if (isInteractive) {
+    const _useEslint = await prompts.confirm({
+      message: 'Add ESLint for code linting?',
+      initialValue: useEslint,
+    });
+    if (prompts.isCancel(_useEslint)) return cancel();
+    useEslint = _useEslint;
+  }
+
+  let usePrettier = options.prettier !== false;
+  if (isInteractive) {
+    const _usePrettier = await prompts.confirm({
+      message: 'Add Prettier for code formatting?',
+      initialValue: usePrettier,
+    });
+    if (prompts.isCancel(_usePrettier)) return cancel();
+    usePrettier = _usePrettier;
+  }
+
+  let useGit = options.git !== false;
+  const isGitAvailable = isGitInstalled();
+  if (isGitAvailable) {
+    if (isInteractive) {
+      const _useGit = await prompts.confirm({
+        message: 'Initialize Git repository?',
+        initialValue: useGit,
+      });
+      if (prompts.isCancel(_useGit)) return cancel();
+      useGit = _useGit && isGitAvailable;
+    }
+  } else {
+    prompts.log.warn('Git is not installed. Git repository initialization will be skipped.');
+    prompts.log.info('Install Git to enable repository initialization: https://git-scm.com/downloads');
+  }
+
+  let useEnv = options.env !== false;
+  if (isInteractive) {
+    const _useEnv = await prompts.confirm({
+      message: 'Setup environment variables (.env file)?',
+      initialValue: useEnv,
+    });
+    if (prompts.isCancel(_useEnv)) return cancel();
+    useEnv = _useEnv;
+  }
 
   const root = path.join(cwd, targetDir);
+
+  if (shouldOverwrite) {
+    emptyDir(targetDir);
+  }
   fs.mkdirSync(root, { recursive: true });
 
   prompts.log.step(`Scaffolding project in ${root}...`);
 
   const templateDir = path.resolve(fileURLToPath(import.meta.url), '../..', `template`);
 
-  // Validate template directory exists
   if (!fs.existsSync(templateDir)) {
     prompts.log.error('Template directory not found. Please reinstall create-tsx-app.');
     return;
   }
 
-  // Validate package manager
   const validPackageManagers = ['npm', 'pnpm', 'yarn', 'bun'];
   if (!validPackageManagers.includes(packageManager)) {
     prompts.log.warn(`Unknown package manager: ${packageManager}. Falling back to npm.`);
@@ -148,16 +176,24 @@ async function init() {
 
   const files = fs.readdirSync(templateDir).filter(f => f !== 'package.json');
 
+  const filesToCopy = [];
   for (const file of files) {
+    if (file === '_eslint.config.js' && (!useEslint || usePrettier)) continue;
+    if (file === '_eslint.prettier.config.js' && (!useEslint || !usePrettier)) continue;
+    if (file === '_prettierrc.json' && !usePrettier) continue;
+    if (file === '_prettierignore' && !usePrettier) continue;
+    if (file === '_env' && !useEnv) continue;
+
+    filesToCopy.push(file);
+  }
+
+  // Copy files
+
+  for (const file of filesToCopy) {
     const srcFile = path.join(templateDir, file);
     const destFile = path.join(root, renameFiles[file] || file);
 
     try {
-      const isDir = fs.statSync(srcFile).isDirectory();
-
-      // Log the progress of each file or dir being copied
-      prompts.log.step(`Copying ${isDir ? 'directory' : 'file'}: ${renameFiles[file] || file}`);
-
       writeFile(destFile, srcFile);
     } catch (error) {
       prompts.log.error(`Failed to copy ${file}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -169,9 +205,12 @@ async function init() {
 
   pkg.name = packageName;
 
+  if (useEslint) pkg.scripts = { ...pkg.scripts, lint: 'eslint src/**/*.ts', 'lint:fix': 'eslint src/**/*.ts --fix' };
+  if (usePrettier) pkg.scripts = { ...pkg.scripts, format: 'prettier --write src/**/*.ts', 'format:check': 'prettier --check src/**/*.ts' };
+  if (useEnv) pkg.scripts = { ...pkg.scripts, dev: 'tsx watch -r dotenv/config src/index.ts', start: 'tsx -r dotenv/config src/index.ts' };
+
   writeFile(path.join(root, 'package.json'), undefined, JSON.stringify(pkg, null, 2) + '\n');
 
-  // Process README.md template if it exists
   const readmePath = path.join(templateDir, 'README.md');
   if (fs.existsSync(readmePath)) {
     let readmeContent = fs.readFileSync(readmePath, 'utf-8');
@@ -179,46 +218,57 @@ async function init() {
     fs.writeFileSync(path.join(root, 'README.md'), readmeContent);
   }
 
-  // Installing dependencies
+  // Install dependencies
 
-  let installDeps = argInstall;
+  const devDependencies = ['typescript', 'tsx', '@types/node'];
+  if (useEslint) devDependencies.push('eslint', '@eslint/js', '@typescript-eslint/eslint-plugin', '@typescript-eslint/parser');
+  if (usePrettier) devDependencies.push('prettier');
+  if (useEslint && usePrettier) devDependencies.push('eslint-plugin-prettier', 'eslint-config-prettier');
+  if (useEnv) devDependencies.push('dotenv');
 
-  if (!installDeps) {
-    const _installDeps = await prompts.confirm({
-      message: 'Do you want to install dependencies now?',
-      initialValue: true,
-    });
-
-    if (prompts.isCancel(_installDeps)) return cancel();
-    installDeps = _installDeps;
-  }
-
-  if (installDeps) {
+  const devDependenciesStr = devDependencies.join(' ');
+  prompts.log.step(`Installing ${devDependencies.length} dependencies using ${packageManager}...`);
+  try {
+    const s = prompts.spinner();
+    s.start(`Downloading packages...`);
     try {
-      prompts.log.step(`Installing dependencies using ${packageManager}...`);
-
       switch (packageManager) {
         case 'bun':
-          execSync(`bun add -D typescript tsx`, { cwd: root, stdio: 'inherit' });
+          execSync(`bun add -D ${devDependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
           break;
         case 'pnpm':
-          execSync(`pnpm add -D typescript tsx`, { cwd: root, stdio: 'inherit' });
+          execSync(`pnpm add -D ${devDependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
           break;
         case 'yarn':
-          execSync(`yarn add -D typescript tsx`, { cwd: root, stdio: 'inherit' });
+          execSync(`yarn add -D ${devDependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
           break;
         default:
-          execSync(`npm install -D typescript tsx`, { cwd: root, stdio: 'inherit' });
+          execSync(`npm install -D ${devDependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
       }
 
-      prompts.log.step('Dependencies installed successfully.');
+      s.stop('Dependencies installed successfully.');
     } catch (error) {
+      s.stop('Failed to install dependencies.', 1);
       const installCommand = packageManager === 'npm' ? 'install -D' : 'add -D';
-      prompts.log.error(`Failed to install dependencies. You can run \`${packageManager} ${installCommand} typescript tsx\` manually.`);
+      prompts.log.error(`You can run \`${packageManager} ${installCommand} ${devDependenciesStr}\` manually.`);
     }
-  } else {
-    const installCommand = packageManager === 'npm' ? 'npm install -D typescript tsx' : `${packageManager} add -D typescript tsx`;
-    prompts.log.info(`You can install dependencies later by running \`${installCommand}\` inside the project folder.`);
+  } catch (error) {
+    const installCommand = packageManager === 'npm' ? 'install -D' : 'add -D';
+    prompts.log.error(`Failed to install dependencies. You can run \`${packageManager} ${installCommand} ${devDependenciesStr}\` manually.`);
+  }
+
+  // Initialize Git repository
+
+  if (useGit) {
+    try {
+      prompts.log.step('Initializing Git repository...');
+      execSync('git init', { cwd: root, stdio: 'pipe' });
+      execSync('git add .', { cwd: root, stdio: 'pipe' });
+      execSync('git commit -m "Initial commit"', { cwd: root, stdio: 'pipe' });
+      prompts.log.step('Git repository initialized with initial commit.');
+    } catch (error) {
+      prompts.log.warn('Failed to initialize Git repository. You can run `git init` manually.');
+    }
   }
 
   prompts.outro(`
@@ -226,15 +276,14 @@ async function init() {
 
 Next steps:
   1. Navigate to your project: cd ${targetDir}
-  ${
-    installDeps
-      ? '2. Start developing: npm run dev'
-      : `2. Install dependencies: ${packageManager === 'npm' ? 'npm install -D typescript tsx' : `${packageManager} add -D typescript tsx`}
-  3. Start developing: npm run dev`
-  }
+  2. Start developing: npm run dev
+  3. Build your project: npm run build
 
 Happy coding! 🚀
   `);
 }
 
-init().catch(console.error);
+init().catch(error => {
+  console.error(error);
+  process.exit(1);
+});
