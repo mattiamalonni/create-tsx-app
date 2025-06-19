@@ -1,6 +1,6 @@
 {
   "name": "create-tsx-app",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A CLI tool to quickly scaffold a TypeScript project with tsx support, providing an easy and efficient development setup.",
   "type": "module",
   "bin": {
@@ -26,6 +26,7 @@
   "devDependencies": {
     "@clack/prompts": "^0.10.0",
     "@types/node": "^22.13.8",
+    "cac": "^6.7.14",
     "prettier": "^3.5.3",
     "unbuild": "^3.5.0"
   },
@@ -37,8 +38,5 @@
   "homepage": "https://github.com/mattiamalonni/create-tsx-app#readme",
   "bugs": {
     "url": "https://github.com/mattiamalonni/create-tsx-app/issues"
-  },
-  "dependencies": {
-    "cac": "^6.7.14"
   }
 }
