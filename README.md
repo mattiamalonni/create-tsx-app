@@ -1,112 +1,134 @@
 # create-tsx-app
 
-A CLI tool that quickly scaffolds a new TypeScript project with [tsx](https://github.com/privatenumber/tsx) pre-configured. It sets up a clean and minimal project structure, allowing you to start coding immediately.
+> ⚡ Lightning-fast TypeScript project scaffolding with [tsx](https://github.com/privatenumber/tsx)
 
-## Features
+Create production-ready TypeScript projects in seconds with zero configuration.
 
-- **Interactive prompts** for project setup
-- **Customizable project name and package.json**
-- **Automatically installs dependencies** (`typescript` and `tsx`)
-- **Smart package manager detection** - automatically uses the same package manager you used to run the command
-- **Minimal boilerplate with a ready-to-run TypeScript setup**
+## Quick Start
+
+```bash
+npm create tsx-app@latest my-app
+# or
+pnpm create tsx-app@latest my-app
+# or
+yarn create tsx-app my-app
+# or
+bun create tsx-app my-app
+```
+
+## ✨ Features
+
+- 🚀 **Zero Config** - Ready to code immediately
+- 📦 **Smart Package Manager Detection** - Uses npm, pnpm, yarn, or bun automatically
+- 🎯 **Interactive Setup** - Guided project configuration
+- ⚡ **Fast Development** - Pre-configured with tsx for instant TypeScript execution
+- 🧹 **Clean Structure** - Minimal boilerplate, maximum productivity
+- 🔍 **Intelligent Validation** - Project name validation and directory handling
 
 ## Usage
 
-### **Basic Usage**
+### Basic Usage
 
-```sh
-# Using npx directly
+```bash
+# Create a new project
+npm create tsx-app@latest my-project
+
+# Create and install dependencies automatically
+npm create tsx-app@latest my-project --install
+
+# Overwrite existing directory
+npm create tsx-app@latest my-project --overwrite
+```
+
+### Command Options
+
+| Flag          | Alias | Description                  |
+| ------------- | ----- | ---------------------------- |
+| `--install`   | `-i`  | Auto-install dependencies    |
+| `--overwrite` | `-o`  | Overwrite existing directory |
+| `--help`      | `-h`  | Show help message            |
+
+### All Package Managers Supported
+
+```bash
+# npm
+npm create tsx-app@latest my-app
 npx create-tsx-app@latest my-app
 
-# Using pnpm
+# pnpm
 pnpm create tsx-app@latest my-app
+pnpm dlx create-tsx-app@latest my-app
 
-# Using yarn
+# yarn
 yarn create tsx-app my-app
+yarn dlx create-tsx-app my-app
+
+# bun
+bun create tsx-app my-app
 ```
 
-This will:
+## 🔧 What You Get
 
-- Ask for a project name (`my-app` by default)
-- Check if the directory is empty
-- Prompt to overwrite or keep existing files if necessary
-- Generate a minimal TypeScript project
-- Ask if you want to install dependencies
-- **Automatically detect which package manager you used** and use it for installation
-
-### **Command-Line Options**
-
-| Option        | Alias | Description                                    |
-| ------------- | ----- | ---------------------------------------------- |
-| `--install`   | `-i`  | Automatically install dependencies             |
-| `--overwrite` | `-o`  | Overwrite an existing directory without asking |
-
-### **Example Usage with Flags**
-
-```sh
-# Automatically install dependencies without prompting
-npx create-tsx-app@latest my-app --install
-```
-
-This will create the project and install dependencies automatically using the detected package manager.
-
-```sh
-# Overwrite existing directory without prompting
-npx create-tsx-app@latest my-app --overwrite
-```
-
-This will remove existing files in `my-app` and proceed with the setup.
-
-## Package Manager Detection
-
-The tool automatically detects which package manager you used to run the command:
-
-- **npm**: When using `npm create tsx-app` or `npx create-tsx-app`
-- **pnpm**: When using `pnpm create tsx-app` or `pnpm dlx create-tsx-app`
-- **yarn**: When using `yarn create tsx-app` or `yarn dlx create-tsx-app`
-
-The detected package manager will be used for:
-
-- Installing dependencies (if you choose to install them)
-- Showing appropriate commands in success messages
-- Ensuring consistency with your preferred tooling
-
-## Dependency Installation
-
-When you choose to install dependencies, the tool will:
-
-- Install the required dev dependencies (`typescript` and `tsx`)
-- Use the detected package manager for installation:
-  - `npm install` for npm
-  - `pnpm install` for pnpm
-  - `yarn install` for yarn
-
-This ensures dependencies are installed using your preferred package manager.
-
-## Project Structure
-
-After running the command, your project will have the following structure:
+Your new project includes:
 
 ```
 my-app/
-├── src/                # Your source code directory
-│   ├── index.ts        # Entry point
-├── tsconfig.json       # TypeScript configuration
-├── package.json        # Project metadata and dependencies
-├── .gitignore          # Git ignore file
-└── README.md           # Project documentation
+├── src/
+│   └── index.ts        # Entry point with example code
+├── package.json        # Dependencies: typescript + tsx
+├── tsconfig.json       # Optimized TypeScript config
+├── .gitignore          # Node.js gitignore
+└── README.md           # Getting started guide
 ```
 
-## Contributing
+### Ready-to-Use Commands
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+```bash
+cd my-app
 
-## License
+# Development (with tsx for instant execution)
+npm run dev
+
+# Build for production
+npm run build
+
+# Type checking
+npm run type-check
+```
+
+## 🎯 Smart Features
+
+### Package Manager Detection
+
+Automatically detects and uses your preferred package manager:
+
+- Detects from execution context (`npm_execpath`, `npm_config_user_agent`)
+- Supports npm, pnpm, yarn, and bun
+- Uses detected manager for dependency installation
+- Shows relevant commands in success messages
+
+### Directory Handling
+
+- ✅ Creates new directories automatically
+- 🔍 Checks if directories are empty (ignores `.git`)
+- ❓ Prompts before overwriting existing files
+- 🧹 Smart cleanup when overwriting
+
+### Project Name Validation
+
+- Validates npm package name format
+- Auto-converts invalid names to valid ones
+- Handles special characters and spaces
+- Ensures lowercase formatting
+
+## 🤝 Contributing
+
+Contributions welcome! Feel free to open issues or submit PRs.
+
+## 📄 License
 
 MIT © [Mattia Malonni](https://github.com/mattiamalonni)
 
-## Links
+---
 
-- [GitHub Repository](https://github.com/mattiamalonni/create-tsx-app)
-- [Issues](https://github.com/mattiamalonni/create-tsx-app/issues)
-- [npm Package](https://www.npmjs.com/package/create-tsx-app)
+**Links:** [GitHub](https://github.com/mattiamalonni/create-tsx-app) • [npm](https://www.npmjs.com/package/create-tsx-app) • [Issues](https://github.com/mattiamalonni/create-tsx-app/issues)
