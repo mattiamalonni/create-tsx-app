@@ -1,6 +1,6 @@
 {
   "name": "create-tsx-app",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A CLI tool to quickly scaffold a TypeScript project with tsx support, providing an easy and efficient development setup.",
   "type": "module",
   "bin": {
