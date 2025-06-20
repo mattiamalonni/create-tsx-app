@@ -2,20 +2,6 @@
 
 > Create production-ready TypeScript projects in seconds with zero configuration and all modern tools included by default.
 
-## ✨ Features
-
-- 🚀 **Zero Config** - Ready to code immediately with all tools enabled by default
-- 📦 **Smart Package Manager Detection** - Uses npm, pnpm, yarn, or bun automatically
-- 🎯 **Interactive or Silent Mode** - Choose your setup style
-- ⚡ **Fast Development** - Pre-configured with tsx for instant TypeScript execution
-- 🧹 **Clean Structure** - Minimal boilerplate, maximum productivity
-- 🔍 **Intelligent Validation** - Project name validation and directory handling
-- 🛡️ **ESLint Ready** - Modern ESLint 9 with TypeScript support (flat config)
-- 💅 **Prettier Integration** - Code formatting with ESLint compatibility
-- 📦 **Git Initialization** - Repository setup with initial commit
-- 🌍 **Environment Variables** - `.env` file support with tsx native integration
-- 🔧 **Auto-Install** - Dependencies are automatically installedng-fast TypeScript project scaffolding with [tsx](https://github.com/privatenumber/tsx)
-
 ## Quick Start
 
 ```bash
@@ -30,15 +16,17 @@ bun create tsx-app my-app
 
 ## ✨ Features
 
-- 🚀 **Zero Config** - Ready to code immediately
+- 🚀 **Zero Config** - Ready to code immediately with all tools enabled by default
 - 📦 **Smart Package Manager Detection** - Uses npm, pnpm, yarn, or bun automatically
-- 🎯 **Interactive Setup** - Guided project configuration
+- 🎯 **Interactive or Silent Mode** - Choose your setup style
 - ⚡ **Fast Development** - Pre-configured with tsx for instant TypeScript execution
 - 🧹 **Clean Structure** - Minimal boilerplate, maximum productivity
 - 🔍 **Intelligent Validation** - Project name validation and directory handling
-- 🛡️ **Optional ESLint** - Modern ESLint 9 with TypeScript support (flat config)
-- � **Optional Prettier** - Code formatting with sensible defaults
-- �📦 **Auto-Install** - Dependencies are automatically installed
+- 🛡️ **ESLint Ready** - Modern ESLint 9 with TypeScript support (flat config)
+- 💅 **Prettier Integration** - Code formatting with ESLint compatibility
+- 📦 **Git Initialization** - Repository setup with initial commit
+- 🌍 **Environment Variables** - `.env` file support with tsx native integration
+- 🔧 **Auto-Install** - Dependencies are automatically installed
 
 ## Usage
 
@@ -98,6 +86,7 @@ npm create tsx-app@latest my-project --no-git --no-env
 | `--no-prettier` |       | Skip Prettier configuration                      |
 | `--no-git`      |       | Skip Git repository initialization               |
 | `--no-env`      |       | Skip environment variables setup                 |
+| `--version`     | `-v`  | Display version number                           |
 | `--help`        | `-h`  | Show help message                                |
 
 ### All Package Managers Supported
@@ -208,7 +197,7 @@ console.log(process.env.PORT); // "3000"
 
 ### Git Integration
 
-- � **Auto-initialization** - `git init` with initial commit
+- 📦 **Auto-initialization** - `git init` with initial commit
 - 📝 **Clean history** - Professional commit message and clean initial state
 - 🔧 **Ready to push** - Add your remote and start collaborating
 - 📋 **Proper .gitignore** - Node.js specific ignore patterns
@@ -236,7 +225,7 @@ Automatically detects and uses your preferred package manager:
 - Handles special characters and spaces
 - Ensures lowercase formatting
 
-## � Dependencies Included
+## 📦 Dependencies Included
 
 ### Base Dependencies (Always Included)
 
@@ -260,7 +249,7 @@ Automatically detects and uses your preferred package manager:
 
 - `dotenv` - Environment variable loading
 
-## �📋 Requirements
+## 📋 Requirements
 
 - Node.js >= 18.0.0
 
