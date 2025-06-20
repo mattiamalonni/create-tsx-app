@@ -9,12 +9,14 @@ cli
   .help()
   .option('-o, --overwrite', 'Overwrite existing directory without asking')
   .option('-i, --interactive', 'Enable interactive prompts (default: auto-setup with all features)')
-  .option('--no-eslint', 'Skip ESLint configuration')
-  .option('--no-prettier', 'Skip Prettier configuration')
-  .option('--no-git', 'Skip Git repository initialization')
-  .option('--no-env', 'Skip environment variables setup')
+  .option('-t, --template <template>', 'Template to use (basic, express, fastify)', { default: 'basic' })
+  .option('--eslint', 'Include ESLint configuration (default: true)', { default: true })
+  .option('--prettier', 'Include Prettier configuration (default: true)', { default: true })
+  .option('--git', 'Initialize Git repository (default: true)', { default: true })
+  .option('--env', 'Setup environment variables (default: true)', { default: true })
   .example('create-tsx-app my-app')
-  .example('create-tsx-app my-app --interactive')
+  .example('create-tsx-app my-app --template express')
+  .example('create-tsx-app my-app --template fastify --interactive')
   .example('create-tsx-app my-app --no-eslint --no-prettier');
 
 const parsed = cli.parse();

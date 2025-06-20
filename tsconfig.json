@@ -1,5 +1,6 @@
 {
   "include": ["build.config.ts", "src"],
+  "exclude": ["templates/**/*", "dist/**/*", "node_modules/**/*"],
   "compilerOptions": {
     "outDir": "dist",
     "target": "ES2022",

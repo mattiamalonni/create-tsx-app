@@ -55,6 +55,15 @@ async function init() {
     process.exit(1);
   }
 
+  // Validate template
+  const validTemplates = ['basic', 'express', 'fastify'];
+  const selectedTemplate = options.template || 'basic';
+
+  if (!validTemplates.includes(selectedTemplate)) {
+    prompts.log.error(`Invalid template "${selectedTemplate}". Available templates: ${validTemplates.join(', ')}`);
+    process.exit(1);
+  }
+
   let targetDir = args[0];
   if (!targetDir) {
     const _targetDir = await prompts.text({
@@ -66,8 +75,11 @@ async function init() {
     targetDir = formatTargetDir(_targetDir as string);
   }
 
+  // Calculate the absolute path for the project
+  const root = path.isAbsolute(targetDir) ? targetDir : path.join(cwd, targetDir);
+
   let shouldOverwrite = false;
-  if (!isDirEmpty(targetDir)) {
+  if (!isDirEmpty(root)) {
     const overwrite = options.overwrite
       ? 'yes'
       : await prompts.select({
@@ -105,9 +117,8 @@ async function init() {
 
   const isInteractive = options.interactive;
 
-  // When --no-feature is used, cac sets feature to false
-  // Default to true for all features, disable only if explicitly set to false
-  let useEslint = options.eslint !== false;
+  // Use the CLI options directly - cac handles --no-* flags by setting the option to false
+  let useEslint = options.eslint;
   if (isInteractive) {
     const _useEslint = await prompts.confirm({
       message: 'Add ESLint for code linting?',
@@ -117,7 +128,7 @@ async function init() {
     useEslint = _useEslint;
   }
 
-  let usePrettier = options.prettier !== false;
+  let usePrettier = options.prettier;
   if (isInteractive) {
     const _usePrettier = await prompts.confirm({
       message: 'Add Prettier for code formatting?',
@@ -127,7 +138,7 @@ async function init() {
     usePrettier = _usePrettier;
   }
 
-  let useGit = options.git !== false;
+  let useGit = options.git;
   const isGitAvailable = isGitInstalled();
   if (isGitAvailable) {
     if (isInteractive) {
@@ -143,7 +154,7 @@ async function init() {
     prompts.log.info('Install Git to enable repository initialization: https://git-scm.com/downloads');
   }
 
-  let useEnv = options.env !== false;
+  let useEnv = options.env;
   if (isInteractive) {
     const _useEnv = await prompts.confirm({
       message: 'Setup environment variables (.env file)?',
@@ -153,19 +164,22 @@ async function init() {
     useEnv = _useEnv;
   }
 
-  const root = path.join(cwd, targetDir);
-
-  if (shouldOverwrite) {
-    emptyDir(targetDir);
-  }
+  if (shouldOverwrite) emptyDir(root);
   fs.mkdirSync(root, { recursive: true });
 
   prompts.log.step(`Scaffolding project in ${root}...`);
 
-  const templateDir = path.resolve(fileURLToPath(import.meta.url), '../..', `template`);
+  const templatesDir = path.resolve(fileURLToPath(import.meta.url), '../..', `templates`);
+  const templateDir = path.join(templatesDir, selectedTemplate);
+  const commonDir = path.join(templatesDir, 'common');
 
   if (!fs.existsSync(templateDir)) {
-    prompts.log.error('Template directory not found. Please reinstall create-tsx-app.');
+    prompts.log.error(`Template "${selectedTemplate}" not found. Please reinstall create-tsx-app.`);
+    return;
+  }
+
+  if (!fs.existsSync(commonDir)) {
+    prompts.log.error('Common template files not found. Please reinstall create-tsx-app.');
     return;
   }
 
@@ -174,23 +188,43 @@ async function init() {
     prompts.log.warn(`Unknown package manager: ${packageManager}. Falling back to npm.`);
   }
 
-  const files = fs.readdirSync(templateDir).filter(f => f !== 'package.json');
+  // Get files from template directory (specific template files)
+  const templateFiles = fs.readdirSync(templateDir).filter(f => f !== 'package.json');
+
+  // Get files from common directory (shared configuration files)
+  const commonFiles = fs.readdirSync(commonDir);
 
   const filesToCopy = [];
-  for (const file of files) {
-    if (file === '_eslint.config.js' && (!useEslint || usePrettier)) continue;
-    if (file === '_eslint.prettier.config.js' && (!useEslint || !usePrettier)) continue;
-    if (file === '_prettierrc.json' && !usePrettier) continue;
-    if (file === '_prettierignore' && !usePrettier) continue;
+
+  // Add template-specific files
+  for (const file of templateFiles) {
+    filesToCopy.push({ file, source: templateDir });
+  }
+
+  // Add common files based on feature flags
+  for (const file of commonFiles) {
+    // Skip ESLint files if ESLint is disabled
+    if (file.includes('_eslint') && !useEslint) continue;
+
+    // Skip Prettier files if Prettier is disabled
+    if ((file === '_prettierrc.json' || file === '_prettierignore') && !usePrettier) continue;
+
+    // Skip env file if env is disabled
     if (file === '_env' && !useEnv) continue;
 
-    filesToCopy.push(file);
+    // Skip gitignore if git is disabled
+    if (file === '_gitignore' && !useGit) continue;
+
+    // Choose the right ESLint config based on Prettier usage
+    if (file === '_eslint.config.js' && useEslint && usePrettier) continue; // Skip basic ESLint config when using Prettier
+    if (file === '_eslint.prettier.config.js' && (!useEslint || !usePrettier)) continue; // Skip Prettier ESLint config when not using both
+
+    filesToCopy.push({ file, source: commonDir });
   }
 
   // Copy files
-
-  for (const file of filesToCopy) {
-    const srcFile = path.join(templateDir, file);
+  for (const { file, source } of filesToCopy) {
+    const srcFile = path.join(source, file);
     const destFile = path.join(root, renameFiles[file] || file);
 
     try {
@@ -211,50 +245,74 @@ async function init() {
 
   writeFile(path.join(root, 'package.json'), undefined, JSON.stringify(pkg, null, 2) + '\n');
 
-  const readmePath = path.join(templateDir, 'README.md');
-  if (fs.existsSync(readmePath)) {
-    let readmeContent = fs.readFileSync(readmePath, 'utf-8');
-    readmeContent = readmeContent.replace(/\{\{PROJECT_NAME\}\}/g, packageName);
-    fs.writeFileSync(path.join(root, 'README.md'), readmeContent);
-  }
-
   // Install dependencies
 
+  const dependencies = [];
   const devDependencies = ['typescript', 'tsx', '@types/node'];
+
+  // Add template-specific dependencies
+  if (selectedTemplate === 'express') {
+    dependencies.push('express', 'cors', 'helmet', 'morgan');
+    devDependencies.push('@types/express', '@types/cors', '@types/morgan');
+  } else if (selectedTemplate === 'fastify') {
+    dependencies.push('fastify', '@fastify/cors', '@fastify/helmet', '@fastify/swagger', '@fastify/swagger-ui');
+  }
+
+  // Add feature-specific dependencies
   if (useEslint) devDependencies.push('eslint', '@eslint/js', '@typescript-eslint/eslint-plugin', '@typescript-eslint/parser');
   if (usePrettier) devDependencies.push('prettier');
   if (useEslint && usePrettier) devDependencies.push('eslint-plugin-prettier', 'eslint-config-prettier');
-  if (useEnv) devDependencies.push('dotenv');
+  if (useEnv) dependencies.push('dotenv');
 
-  const devDependenciesStr = devDependencies.join(' ');
-  prompts.log.step(`Installing ${devDependencies.length} dependencies using ${packageManager}...`);
+  const totalDependencies = dependencies.length + devDependencies.length;
+  prompts.log.step(`Installing ${totalDependencies} dependencies using ${packageManager}...`);
+
+  const s = prompts.spinner();
+  s.start(`Downloading packages...`);
   try {
-    const s = prompts.spinner();
-    s.start(`Downloading packages...`);
-    try {
+    // Install regular dependencies first (if any)
+    if (dependencies.length > 0) {
+      const dependenciesStr = dependencies.join(' ');
       switch (packageManager) {
         case 'bun':
-          execSync(`bun add -D ${devDependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
+          execSync(`bun add ${dependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
           break;
         case 'pnpm':
-          execSync(`pnpm add -D ${devDependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
+          execSync(`pnpm add ${dependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
           break;
         case 'yarn':
-          execSync(`yarn add -D ${devDependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
+          execSync(`yarn add ${dependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
           break;
         default:
-          execSync(`npm install -D ${devDependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
+          execSync(`npm install ${dependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
       }
-
-      s.stop('Dependencies installed successfully.');
-    } catch (error) {
-      s.stop('Failed to install dependencies.', 1);
-      const installCommand = packageManager === 'npm' ? 'install -D' : 'add -D';
-      prompts.log.error(`You can run \`${packageManager} ${installCommand} ${devDependenciesStr}\` manually.`);
     }
+
+    // Install dev dependencies
+    const devDependenciesStr = devDependencies.join(' ');
+    switch (packageManager) {
+      case 'bun':
+        execSync(`bun add -D ${devDependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
+        break;
+      case 'pnpm':
+        execSync(`pnpm add -D ${devDependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
+        break;
+      case 'yarn':
+        execSync(`yarn add -D ${devDependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
+        break;
+      default:
+        execSync(`npm install -D ${devDependenciesStr} --silent`, { cwd: root, stdio: 'pipe' });
+    }
+
+    s.stop('Dependencies installed successfully.');
   } catch (error) {
-    const installCommand = packageManager === 'npm' ? 'install -D' : 'add -D';
-    prompts.log.error(`Failed to install dependencies. You can run \`${packageManager} ${installCommand} ${devDependenciesStr}\` manually.`);
+    s.stop('Failed to install dependencies.', 1);
+    const installCommand = packageManager === 'npm' ? 'install' : 'add';
+    const devInstallCommand = packageManager === 'npm' ? 'install -D' : 'add -D';
+    if (dependencies.length > 0) {
+      prompts.log.error(`You can run \`${packageManager} ${installCommand} ${dependencies.join(' ')}\` manually.`);
+    }
+    prompts.log.error(`You can run \`${packageManager} ${devInstallCommand} ${devDependencies.join(' ')}\` manually.`);
   }
 
   // Initialize Git repository
