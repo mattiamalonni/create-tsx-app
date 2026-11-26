@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.2.0
+
+- **CLI**: resolves every generated dependency from the npm registry at scaffold time, so projects created months after a release use current versions.
+- **CLI**: `--offline` keeps the bundled version ranges and skips all network lookups; failed lookups fall back per package with a warning.
+- **Verification**: 26 tests, including a local mock registry for version resolution.
+
 ## 5.1.0
 
 - **CLI**: `--dry-run` previews every file without touching disk (scaffolding now builds an explicit file plan).

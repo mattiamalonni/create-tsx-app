@@ -20,6 +20,7 @@ export interface CliOptions {
   scope?: string;
   author?: string;
   license?: boolean;
+  offline?: boolean;
   completion?: string;
   listTemplates?: boolean;
   help?: boolean;
@@ -41,6 +42,7 @@ cli
   .option('-i, --interactive', 'Prompt for every option instead of using defaults')
   .option('-y, --yes', 'Accept all defaults without prompting')
   .option('-n, --dry-run', 'Show what would be created without writing anything')
+  .option('--offline', 'Use bundled dependency versions instead of querying the registry')
   .option('-t, --template <template>', 'Built-in template (basic, express, fastify) or a local directory')
   .option('-p, --package-manager <manager>', 'Package manager to use (npm, pnpm, yarn, bun)')
   .option('-s, --scope <scope>', 'Publish the generated package under an npm scope')

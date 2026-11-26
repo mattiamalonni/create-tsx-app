@@ -16,12 +16,13 @@ export interface UserConfig {
   env?: boolean;
   install?: boolean;
   license?: boolean;
+  offline?: boolean;
   overwrite?: boolean;
 }
 
 const CONFIG_FILES = ['create-tsx-app.config.ts', 'create-tsx-app.config.mts'] as const;
 
-const BOOLEAN_KEYS = ['lint', 'format', 'git', 'gitCommit', 'ci', 'docker', 'env', 'install', 'license', 'overwrite'] as const;
+const BOOLEAN_KEYS = ['lint', 'format', 'git', 'gitCommit', 'ci', 'docker', 'env', 'install', 'license', 'offline', 'overwrite'] as const;
 const STRING_KEYS = ['template', 'packageManager', 'scope', 'author'] as const;
 
 function normalize(value: unknown): UserConfig {

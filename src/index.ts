@@ -4,6 +4,7 @@ import cli from './cli';
 import { completionScript, isShell, SHELLS } from './completion';
 import { TEMPLATE_DESCRIPTIONS } from './config';
 import { VALID_TEMPLATES } from './validations';
+import { refreshPlanVersions } from './versions';
 import { initGit, installDependencies } from './install';
 import { collectAnswers } from './prompts';
 import { createPlan, scaffold } from './scaffold';
@@ -47,13 +48,23 @@ async function init(): Promise<void> {
 
   prompts.log.step(`${cli.options.dryRun ? 'Previewing' : 'Creating'} ${targetDir} (${template} template)...`);
   try {
+    const plan = createPlan(answers);
     if (cli.options.dryRun) {
-      const plan = createPlan(answers);
       for (const file of plan) prompts.log.info(`  ${file.path}`);
       prompts.outro(`Dry run: ${plan.length} files would be created in ${targetDir}. Nothing was written.`);
       return;
     }
-    scaffold(answers);
+
+    const offline = cli.options.offline ?? config.offline ?? false;
+    if (features.install && !offline) {
+      const spinner = prompts.spinner();
+      spinner.start('Resolving latest dependency versions...');
+      const { resolved, failed } = await refreshPlanVersions(plan);
+      spinner.stop(`Resolved ${resolved} dependency versions from the registry.`);
+      if (failed > 0) prompts.log.warn(`${failed} version lookup(s) failed; bundled ranges were kept for those packages.`);
+    }
+
+    scaffold(answers, plan);
   } catch (error) {
     prompts.log.error(`Scaffolding failed: ${describeError(error)}`);
     process.exit(1);

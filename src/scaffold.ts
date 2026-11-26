@@ -251,8 +251,7 @@ export function createPlan(answers: Answers): FilePlan[] {
   return plan;
 }
 
-export function scaffold(answers: Answers): FilePlan[] {
-  const plan = createPlan(answers);
+export function scaffold(answers: Answers, plan: FilePlan[] = createPlan(answers)): FilePlan[] {
   if (answers.overwrite) emptyDir(answers.root);
   fs.mkdirSync(answers.root, { recursive: true });
 

@@ -11,6 +11,7 @@ npx create-tsx-app@latest my-app
 - **Runs immediately** — `tsx watch` gives you instant TypeScript execution, no build step in development.
 - **Real production builds** — the generated `tsc` output is native ESM that Node runs with `node dist/index.js`.
 - **Strict by default** — strict TypeScript plus [Oxlint](https://oxc.rs/docs/guide/usage/linter.html) and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter.html), configured with tiny `.config.ts` files.
+- **Never-stale dependencies** — with installation enabled, packages are resolved from the npm registry at scaffold time, so a command run months after publication still generates current versions (fallback: bundled ranges, or `--offline`).
 - **Your package manager** — auto-detected from the environment; npm is the default, and `--package-manager` can force another one.
 - **No lock-in** — everything generated is plain source and config you can edit freely.
 
@@ -52,6 +53,7 @@ A local directory containing `package.json` and `src/index.ts` can be used as a 
 | `--author <name>`          |       | Author used in LICENSE                                | `Your Name`   |
 | `--scope <scope>`          | `-s`  | Publish as `@scope/name`                              | off           |
 | `--dry-run`                | `-n`  | List the files that would be created                  | off           |
+| `--offline`                |       | Use bundled versions, skip registry lookups           | off           |
 | `--completion <shell>`     |       | Print a `bash`, `zsh` or `fish` completion script     |               |
 | `--list-templates`         |       | List built-in templates                               |               |
 | `--version`                | `-v`  | Print the CLI version                                 |               |
