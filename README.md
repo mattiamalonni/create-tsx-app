@@ -126,8 +126,6 @@ Generated scripts:
 
 ## Development
 
-This repository uses **npm** exclusively. Oxlint/Oxfmt replace ESLint/Prettier.
-
 ```bash
 git clone https://github.com/mattiamalonni/create-tsx-app.git
 cd create-tsx-app
