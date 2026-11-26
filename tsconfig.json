@@ -1,16 +1,24 @@
 {
-  "include": ["build.config.ts", "src"],
+  "include": ["build.config.ts", "oxlint.config.ts", "oxfmt.config.ts", "src", "test"],
   "exclude": ["templates/**/*", "dist/**/*", "node_modules/**/*"],
   "compilerOptions": {
-    "outDir": "dist",
     "target": "ES2022",
-    "module": "ES2020",
+    "lib": ["ES2022"],
+    "module": "ESNext",
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "types": ["node"],
+    "resolveJsonModule": true,
     "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
     "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "declaration": false,
     "sourceMap": false,
-    "noUnusedLocals": true,
-    "esModuleInterop": true
+    "noEmit": true
   }
 }

@@ -1,7 +1,10 @@
-console.log('Hello, TypeScript with tsx! 🚀');
+import './env.js';
 
-const greet = (name: string): string => {
-  return `Hello, ${name}!`;
+const greet = (name: string): string => `Hello, ${name}! 🚀`;
+
+const main = (): void => {
+  console.log(greet('World'));
+  console.log('Edit src/index.ts and run `npm run dev` to see your changes instantly.');
 };
 
-console.log(greet('World'));
+main();

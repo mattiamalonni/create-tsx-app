@@ -1,85 +1,77 @@
-// @ts-nocheck
-import express from 'express';
+import './env.js';
+
 import cors from 'cors';
+import express, { type ErrorRequestHandler } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  createdAt: string;
+}
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = Number(process.env.PORT) || 3000;
 
-// Middleware
-app.use(helmet()); // Security headers
-app.use(cors()); // Enable CORS
-app.use(morgan('combined')); // Logging
-app.use(express.json()); // Parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.disable('x-powered-by');
+app.use(helmet());
+app.use(cors());
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use(express.json({ limit: '1mb' }));
 
-// Routes
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Welcome to your Express TypeScript API!',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
-  });
+app.get('/', (_request, response) => {
+  response.json({ message: 'Welcome to your Express TypeScript API!', version: '1.0.0' });
 });
 
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  });
+app.get('/health', (_request, response) => {
+  response.json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() });
 });
 
-// Example API route
-app.get('/api/users', (req, res) => {
-  const users = [
-    { id: 1, name: 'John Doe', email: 'john@example.com' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
-  ];
-  res.json(users);
+const users: User[] = [
+  { id: 1, name: 'John Doe', email: 'john@example.com', createdAt: new Date().toISOString() },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com', createdAt: new Date().toISOString() },
+];
+
+app.get('/api/users', (_request, response) => {
+  response.json(users);
 });
 
-app.post('/api/users', (req, res) => {
-  const { name, email } = req.body;
+app.post('/api/users', (request, response) => {
+  const { name, email } = (request.body ?? {}) as { name?: unknown; email?: unknown };
 
-  if (!name || !email) {
-    return res.status(400).json({
-      error: 'Name and email are required',
-    });
+  if (typeof name !== 'string' || typeof email !== 'string' || !name.trim() || !email.trim()) {
+    response.status(400).json({ error: 'A non-empty "name" and "email" are required.' });
+    return;
   }
 
-  const newUser = {
-    id: Date.now(),
-    name,
-    email,
-    createdAt: new Date().toISOString(),
-  };
-
-  res.status(201).json(newUser);
+  const user: User = { id: Date.now(), name, email, createdAt: new Date().toISOString() };
+  users.push(user);
+  response.status(201).json(user);
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: `Route ${req.originalUrl} not found`,
-  });
+app.use((_request, response) => {
+  response.status(404).json({ error: 'Not Found' });
 });
 
-// Error handler
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: 'Internal Server Error',
-    message: 'Something went wrong!',
-  });
+const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
+  console.error(error);
+  if (response.headersSent) return;
+  response.status(500).json({ error: 'Internal Server Error' });
+};
+app.use(errorHandler);
+
+const server = app.listen(port, () => {
+  console.log(`🚀 Server listening on http://localhost:${port}`);
+  console.log('   GET  /, /health, /api/users');
+  console.log('   POST /api/users');
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📋 Health check available at http://localhost:${PORT}/health`);
-  console.log(`📚 API endpoints:`);
-  console.log(`   GET  /api/users - List all users`);
-  console.log(`   POST /api/users - Create a new user`);
-});
+const shutdown = (signal: string): void => {
+  console.log(`\n${signal} received, shutting down...`);
+  server.close(() => process.exit(0));
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
