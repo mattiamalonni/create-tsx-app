@@ -1,9 +1,9 @@
-/** Validatori condivisi, senza dipendenze esterne e senza effetti collaterali. */
+/** Shared validators, with no external dependencies and no side effects. */
 
 export const VALID_TEMPLATES = ['basic', 'express', 'fastify'] as const;
 export type Template = (typeof VALID_TEMPLATES)[number];
 
-/** Versione minima di Node richiesta dalla CLI (allineata a `engines.node`). */
+/** Minimum Node version required by the CLI (kept in sync with `engines.node`). */
 export const MIN_NODE_VERSION = '22.18.0';
 
 export function isTemplate(value: string): value is Template {
